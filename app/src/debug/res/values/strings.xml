@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lanoda - Debug</string>
+
+    <!-- Api Access Strings -->
+    <string name="api_root_url">https://staging-lanoda-api.herokuapp.com/</string>
+
+</resources>

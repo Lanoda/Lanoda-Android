@@ -30,6 +30,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import net.lanoda.app.android.R;
+import net.lanoda.app.android.authenticator.Authenticator;
+import net.lanoda.app.android.exceptions.ApiException;
+import net.lanoda.app.android.exceptions.FormValidationException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +61,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private UserLoginTask mAuthTask = null;
 
+
+    private Authenticator authenticator;
+
+
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
@@ -68,9 +75,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
+
+        authenticator = new Authenticator(getBaseContext());
+
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -161,45 +172,45 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         boolean cancel = false;
         View focusView = null;
 
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
-        // Check for a valid email address.
-        if (TextUtils.isEmpty(email)) {
-            mEmailView.setError(getString(R.string.error_field_required));
-            focusView = mEmailView;
-            cancel = true;
-        } else if (!isEmailValid(email)) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
-            cancel = true;
-        }
-
         if (cancel) {
             // There was an error; don't attempt login and focus the first
             // form field with an error.
             focusView.requestFocus();
         } else {
+            showProgress(true);
+
+            try {
+                authenticator.Login(mEmailView, mPasswordView);
+            }
+            catch(FormValidationException e) {
+
+                // Check for a valid password, if the user entered one.
+                if (!TextUtils.isEmpty(password)){// && !isPasswordValid(password)) {
+                    mPasswordView.setError(getString(R.string.error_invalid_password));
+                    focusView = mPasswordView;
+                    cancel = true;
+                }
+
+                // Check for a valid email address.
+                if (TextUtils.isEmpty(email)) {
+                    mEmailView.setError(getString(R.string.error_field_required));
+                    focusView = mEmailView;
+                    cancel = true;
+                } else if (true) {//!isEmailValid(email)) {
+                    mEmailView.setError(getString(R.string.error_invalid_email));
+                    focusView = mEmailView;
+                    cancel = true;
+                }
+            }
+
+            /*
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
             showProgress(true);
             mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);
+            */
         }
-    }
-
-    private boolean isEmailValid(String email) {
-        //TODO: Replace this with your own logic
-        return email.contains("@");
-    }
-
-    private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
-        return password.length() > 4;
     }
 
     /**

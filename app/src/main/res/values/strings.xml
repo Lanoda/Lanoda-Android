@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Lanoda</string>
 
+    <!-- Api Access Strings -->
+
+
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password (optional)</string>
@@ -10,8 +13,9 @@
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
-    <string name="permission_rationale">"Contacts permissions are needed for providing email
-        completions."
+    <string name="permission_rationale">
+        "Contacts permissions are needed for providing email completions."
     </string>
     <string name="title_activity_contacts">ContactsActivity</string>
+
 </resources>
