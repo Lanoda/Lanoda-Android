@@ -27,12 +27,12 @@ public class UserModel extends BaseModel {
         DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm");
 
         try {
-            this.UserId = jsonObj.getInt("UserId");
-            this.FirstName = jsonObj.getString("FirstName");
-            this.LastName = jsonObj.getString("LastName");
-            this.ImageId = jsonObj.getInt("ImageId");
-            this.Email = jsonObj.getString("Email");
-            this.LastLoginAt = df.parse(jsonObj.getString("LastLoginAt"));
+            this.UserId = jsonObj.getInt("id");
+            this.FirstName = jsonObj.getString("firstname");
+            this.LastName = jsonObj.getString("lastname");
+            this.ImageId = jsonObj.getInt("image_id");
+            this.Email = jsonObj.getString("email");
+            this.LastLoginAt = df.parse(jsonObj.getString("last_login_at"));
 
         } catch(JSONException e) {
             // TODO: Implement

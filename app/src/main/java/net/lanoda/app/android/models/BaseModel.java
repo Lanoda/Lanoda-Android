@@ -12,6 +12,8 @@ import java.text.SimpleDateFormat;
  */
 public abstract class BaseModel {
 
-    public abstract void TransformJson(JSONObject jsonObj);
+    public abstract boolean ToModel(JSONObject jsonObj);
+
+    public abstract JSONObject ToJson();
 
 }

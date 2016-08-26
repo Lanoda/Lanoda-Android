@@ -9,6 +9,7 @@ import net.lanoda.app.android.apihelpers.ApiResult;
 import net.lanoda.app.android.apiclients.AuthClient;
 import net.lanoda.app.android.exceptions.ApiException;
 import net.lanoda.app.android.exceptions.FormValidationException;
+import net.lanoda.app.android.models.ApiTokenModel;
 import net.lanoda.app.android.models.UserModel;
 
 /**
@@ -23,7 +24,7 @@ public class Authenticator extends ContextWrapper {
         authAgent = new AuthAgent(base);
     }
 
-    public UserModel Login(View email, View password) throws FormValidationException {
+    public ApiTokenModel AuthorizeApp(View email, View password) throws FormValidationException {
 
         if (!isEmailValid(email.toString())) {
             throw new FormValidationException(email, "Email is not valid");
@@ -31,15 +32,16 @@ public class Authenticator extends ContextWrapper {
             throw new FormValidationException(password, "Password not valid");
         }
 
-        UserModel userModel = null;
+        ApiTokenModel apiTokenModel = null;
+
         try {
-            userModel = authAgent.Login(email.toString(), password.toString());
+            apiTokenModel = authAgent.AuthorizeApp(email.toString(), password.toString());
         }
         catch (ApiException e) {
-            // TODO: Handle
+            // TODO: Handle Exception
         }
 
-        return userModel;
+        return apiTokenModel;
     }
 
     private boolean isEmailValid(String email) {

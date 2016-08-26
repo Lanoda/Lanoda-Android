@@ -180,7 +180,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(true);
 
             try {
-                authenticator.Login(mEmailView, mPasswordView);
+                authenticator.AuthorizeApp(mEmailView, mPasswordView);
             }
             catch(FormValidationException e) {
 

@@ -10,8 +10,8 @@ import net.lanoda.app.android.models.factories.UserModelFactory;
  */
 public class UserClient extends BaseClient<UserModel> {
 
-    public UserClient(Context base, UserModelFactory factory) {
-        super(base, factory);
+    public UserClient(Context base) {
+        super(base, new UserModelFactory());
     }
 
 }

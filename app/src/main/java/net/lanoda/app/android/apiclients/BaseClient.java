@@ -22,41 +22,42 @@ import org.json.JSONObject;
  */
 public class BaseClient<T extends BaseModel> {
 
-    private RequestQueue volleyRequestQueue;
     private Context baseContext;
-    private String baseApiUrl;
+    private RequestQueue volleyRequestQueue;
     private IModelFactory<T> modelFactory;
 
     public BaseClient(Context base, IModelFactory<T> factory) {
         baseContext = base;
-        baseApiUrl = base.getString(R.string.api_root_url);
         volleyRequestQueue = Volley.newRequestQueue(base);
         modelFactory = factory;
     }
 
-    public ApiResult<T> GetAsync(String apiPath, String TAG) {
+    public String GetBaseApiUrl() {
+        return baseContext.getString(R.string.api_root_url);
+    }
+
+    private ApiResult<T> AsyncRequest(String url, String TAG, int requestMethod,
+                                      JSONObject jsonObject) {
 
         final ApiResult<T> apiResult = new ApiResult<T>(modelFactory.create());
-        String url = baseApiUrl + apiPath;
+        JsonObjectRequest jsonObjRequest = new JsonObjectRequest(requestMethod, url, jsonObject,
+                new Response.Listener<JSONObject>() {
 
-        JsonObjectRequest jsonObjRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-            new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // Transform content into model.
+                        apiResult.Content.ToModel(response);
+                    }
+                }, new Response.ErrorListener() {
 
-                @Override
-                public void onResponse(JSONObject response) {
-                    // Display the first 500 characters of the response string.
-                    apiResult.Content.TransformJson(response);
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        String apiErrorId = "ApiError_GET_VolleyError";
+                        ApiError apiError = new ApiError(apiErrorId, error.getMessage());
+                        apiResult.Errors.add(apiError);
+                    }
+
                 }
-            }, new Response.ErrorListener() {
-
-                @Override
-                public void onErrorResponse(VolleyError error) {
-                    String apiErrorId = "ApiError_GET_VolleyError";
-                    ApiError apiError = new ApiError(apiErrorId, error.getMessage());
-                    apiResult.Errors.add(apiError);
-                }
-
-            }
         );
         jsonObjRequest.setTag(TAG);
         volleyRequestQueue.add(jsonObjRequest);
@@ -64,12 +65,20 @@ public class BaseClient<T extends BaseModel> {
         return apiResult;
     }
 
-    public ApiResult PutAsync(String apiPath, String TAG) {
+    public ApiResult<T> DeleteAsync(String url, String TAG) {
+        return AsyncRequest(url, TAG, Request.Method.DELETE, null);
+    }
 
-        final ApiResult apiResult = new ApiResult();
-        String url = baseApiUrl + apiPath;
+    public ApiResult<T> GetAsync(String url, String TAG) {
+        return AsyncRequest(url, TAG, Request.Method.GET, null);
+    }
 
-        return apiResult;
+    public ApiResult<T> PostAsync(String url, String TAG, T model) {
+        return AsyncRequest(url, TAG, Request.Method.POST, model.ToJson());
+    }
+
+    public ApiResult<T> PutAsync(String url, String TAG, T model) {
+        return AsyncRequest(url, TAG, Request.Method.PUT, model.ToJson());
     }
 
 }
