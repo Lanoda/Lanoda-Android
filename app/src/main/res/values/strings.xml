@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">Lanoda</string>
 
-    <!-- Api Access Strings -->
-
+    <!-- Api Parameter Strings -->
+    <string name="api_param_email">email</string>
+    <string name="api_param_password">password</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>

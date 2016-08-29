@@ -2,8 +2,7 @@ package net.lanoda.app.android.apihelpers;
 
 import net.lanoda.app.android.models.BaseModel;
 
-import org.json.JSONObject;
-
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,6 +14,7 @@ public class ApiResult<T extends BaseModel> {
     public List<ApiError> Errors;
     public boolean IsSuccess;
     public String Message;
+    public int Status;
 
     public ApiResult () {}
 
@@ -22,25 +22,27 @@ public class ApiResult<T extends BaseModel> {
         this.Content = content;
         this.IsSuccess = true;
         this.Message = null;
-        this.Errors = null;
+        this.Errors = new ArrayList<>();
     }
 
     public ApiResult (T content, boolean isSuccess) {
         this.Content = content;
         this.IsSuccess = isSuccess;
         this.Message = null;
-        this.Errors = null;
+        this.Errors = new ArrayList<>();
     }
 
     public ApiResult (T content, boolean isSuccess, String errorId, String errorMessage) {
         this.Content = content;
         this.IsSuccess = isSuccess;
+        this.Errors = new ArrayList<>();
         this.Errors.add(new ApiError(errorId, errorMessage));
     }
 
     public ApiResult (T content, boolean isSuccess, List<ApiError> errors) {
         this.Content = content;
         this.IsSuccess = isSuccess;
+        this.Errors = new ArrayList<>();
         this.Errors = errors;
     }
 }

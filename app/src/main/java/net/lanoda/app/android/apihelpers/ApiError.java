@@ -5,8 +5,8 @@ package net.lanoda.app.android.apihelpers;
  */
 public class ApiError {
 
-    String Id;
-    String Message;
+    public String Id;
+    public String Message;
 
     public ApiError(){ }
 

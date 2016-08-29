@@ -1,5 +1,7 @@
 package net.lanoda.app.android.models;
 
+import net.lanoda.app.android.models.factories.IModelFactory;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,8 +14,11 @@ import java.text.SimpleDateFormat;
  */
 public abstract class BaseModel {
 
+    public abstract IModelFactory GetFactory();
+
     public abstract boolean ToModel(JSONObject jsonObj);
 
     public abstract JSONObject ToJson();
 
+    public abstract void Copy(Object model);
 }

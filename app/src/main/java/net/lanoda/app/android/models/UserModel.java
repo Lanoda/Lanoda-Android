@@ -1,5 +1,9 @@
 package net.lanoda.app.android.models;
 
+import net.lanoda.app.android.models.factories.ApiTokenModelFactory;
+import net.lanoda.app.android.models.factories.IModelFactory;
+import net.lanoda.app.android.models.factories.UserModelFactory;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -22,9 +26,14 @@ public class UserModel extends BaseModel {
 
     public UserModel() {};
 
-    public void TransformJson(JSONObject jsonObj) {
+    public IModelFactory<UserModel> GetFactory() {
+        return new UserModelFactory();
+    }
 
-        DateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm");
+    @Override
+    public boolean ToModel(JSONObject jsonObj) {
+
+        DateFormat df = DateFormat.getDateInstance();
 
         try {
             this.UserId = jsonObj.getInt("id");
@@ -34,11 +43,21 @@ public class UserModel extends BaseModel {
             this.Email = jsonObj.getString("email");
             this.LastLoginAt = df.parse(jsonObj.getString("last_login_at"));
 
-        } catch(JSONException e) {
+        } catch(JSONException|ParseException e) {
             // TODO: Implement
-
-        } catch(ParseException e) {
-            // TODO: Implement
+            return false;
         }
+
+        return true;
+    }
+
+    @Override
+    public JSONObject ToJson() {
+        return null;
+    }
+
+    @Override
+    public void Copy(Object model) {
+
     }
 }

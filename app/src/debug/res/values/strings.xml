@@ -4,5 +4,7 @@
 
     <!-- Api Access Strings -->
     <string name="api_root_url">https://staging-lanoda-api.herokuapp.com/</string>
+    <string name="client_id">Lanoda - Android Application</string>
+    <string name="client_secret">GFETrmWx8UPVDemKdAkW2HxB9rMhrN9T</string>
 
 </resources>

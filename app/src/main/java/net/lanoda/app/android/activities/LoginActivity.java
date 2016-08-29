@@ -28,11 +28,14 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.lanoda.app.android.R;
-import net.lanoda.app.android.authenticator.Authenticator;
-import net.lanoda.app.android.exceptions.ApiException;
-import net.lanoda.app.android.exceptions.FormValidationException;
+import net.lanoda.app.android.apiclients.AuthClient;
+import net.lanoda.app.android.apihelpers.ApiError;
+import net.lanoda.app.android.apihelpers.ApiResult;
+import net.lanoda.app.android.apihelpers.IApiTaskCallback;
+import net.lanoda.app.android.models.ApiTokenModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,9 +63,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
-
-
-    private Authenticator authenticator;
+    private AuthClient authClient;
+    private String authorizeAppTag;
 
 
     // UI references.
@@ -70,6 +72,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    private TextView mLoginErrorView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,9 +82,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
-
-        authenticator = new Authenticator(getBaseContext());
-
 
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -94,6 +94,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 return false;
             }
         });
+
+        mLoginErrorView = (TextView) findViewById(R.id.login_error_message);
 
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
@@ -161,6 +163,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             return;
         }
 
+        // Initialize the authentication client.
+        authClient = new AuthClient(getBaseContext());
+
         // Reset errors.
         mEmailView.setError(null);
         mPasswordView.setError(null);
@@ -172,6 +177,24 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         boolean cancel = false;
         View focusView = null;
 
+        // Check for a valid email address.
+        if (TextUtils.isEmpty(email)) {
+            mEmailView.setError(getString(R.string.error_field_required));
+            focusView = mEmailView;
+            cancel = true;
+        } else if (!isEmailValid(email)) {
+            mEmailView.setError(getString(R.string.error_invalid_email));
+            focusView = mEmailView;
+            cancel = true;
+        }
+
+        // Check for a valid password, if the user entered one.
+        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
+            mPasswordView.setError(getString(R.string.error_invalid_password));
+            focusView = mPasswordView;
+            cancel = true;
+        }
+
         if (cancel) {
             // There was an error; don't attempt login and focus the first
             // form field with an error.
@@ -179,29 +202,58 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } else {
             showProgress(true);
 
-            try {
-                authenticator.AuthorizeApp(mEmailView, mPasswordView);
-            }
-            catch(FormValidationException e) {
+            IApiTaskCallback<ApiTokenModel> apiTaskCallback = new IApiTaskCallback<ApiTokenModel>() {
+                @Override
+                public void onTaskFinished(ApiResult<ApiTokenModel> result) {
 
-                // Check for a valid password, if the user entered one.
-                if (!TextUtils.isEmpty(password)){// && !isPasswordValid(password)) {
-                    mPasswordView.setError(getString(R.string.error_invalid_password));
-                    focusView = mPasswordView;
-                    cancel = true;
+                    ApiResult<ApiTokenModel> apiResult = new ApiResult<>();
+
+                    apiResult.Content = result.Content;
+                    apiResult.Errors = result.Errors;
+                    apiResult.IsSuccess = result.IsSuccess;
+                    apiResult.Message = result.Message;
+
+
+                    if (apiResult.Errors != null) {
+                        String errorText = "";
+                        for (ApiError current : result.Errors) {
+                            errorText += "\n";
+                            errorText += current.Id;
+                            errorText += ": ";
+                            errorText += current.Message;
+                            errorText += "\n";
+                        }
+                        mLoginErrorView.setText(errorText);
+                    } else if (result.Content != null) {
+                        mLoginErrorView.setText(result.Content.ToJson().toString());
+                    }
+
+                    showProgress(false);
                 }
 
-                // Check for a valid email address.
-                if (TextUtils.isEmpty(email)) {
-                    mEmailView.setError(getString(R.string.error_field_required));
-                    focusView = mEmailView;
-                    cancel = true;
-                } else if (true) {//!isEmailValid(email)) {
-                    mEmailView.setError(getString(R.string.error_invalid_email));
-                    focusView = mEmailView;
-                    cancel = true;
+                @Override
+                public void onTaskUpdate(Integer... values) {
+                    // TODO: Update
+                    String toastMessage = "Login Cancelled";
+                    int toastDuration = Toast.LENGTH_SHORT;
+
+                    Toast toast = Toast.makeText(getApplicationContext(), toastMessage, toastDuration);
+                    toast.show();
                 }
-            }
+
+                @Override
+                public void onTaskCancelled() {
+                    String toastMessage = "Login Cancelled";
+                    int toastDuration = Toast.LENGTH_SHORT;
+
+                    Toast toast = Toast.makeText(getApplicationContext(), toastMessage, toastDuration);
+                    toast.show();
+                }
+            };
+
+            String clientId = getString(R.string.client_id);
+            String clientSecret = getString(R.string.client_secret);
+            authClient.RequestApiToken(clientId, clientSecret, email, apiTaskCallback);
 
             /*
             // Show a progress spinner, and kick off a background task to
@@ -211,6 +263,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask.execute((Void) null);
             */
         }
+    }
+
+    private boolean isEmailValid(String email) {
+        //TODO: Replace this with your own logic
+        return email.contains("@");
+    }
+
+    private boolean isPasswordValid(String password) {
+        //TODO: Replace this with your own logic
+        return password.length() > 4;
     }
 
     /**

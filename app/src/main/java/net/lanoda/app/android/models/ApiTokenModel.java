@@ -1,5 +1,9 @@
 package net.lanoda.app.android.models;
 
+import net.lanoda.app.android.models.BaseModel;
+import net.lanoda.app.android.models.factories.ApiTokenModelFactory;
+import net.lanoda.app.android.models.factories.IModelFactory;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,6 +23,11 @@ public class ApiTokenModel extends BaseModel {
     public int UserId;
     public Date Expires;
 
+    public ApiTokenModel() {}
+
+    public IModelFactory<ApiTokenModel> GetFactory() {
+        return new ApiTokenModelFactory();
+    }
 
     public boolean ToModel(JSONObject jsonObj) {
 
@@ -29,7 +38,9 @@ public class ApiTokenModel extends BaseModel {
             this.ApiToken = jsonObj.getString("api_token");
             this.ClientId = jsonObj.getString("client_id");
             this.UserId = jsonObj.getInt("user_id");
-            this.Expires = df.parse(jsonObj.getString("expires"));
+
+            JSONObject expireDate = jsonObj.getJSONObject("expires");
+            this.Expires = df.parse(expireDate.getString("date"));
 
         } catch(JSONException|ParseException e) {
             return false;
@@ -56,4 +67,13 @@ public class ApiTokenModel extends BaseModel {
         return obj;
     }
 
+    public void Copy(Object model) {
+        ApiTokenModel realModel = (ApiTokenModel) model;
+
+        this.ApiTokenId = realModel.ApiTokenId;
+        this.ApiToken = realModel.ApiToken;
+        this.ClientId = realModel.ClientId;
+        this.UserId = realModel.UserId;
+        this.Expires = realModel.Expires;
+    }
 }
