@@ -9,7 +9,6 @@ import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -17,10 +16,9 @@ import java.util.Date;
  */
 public class ApiTokenModel extends BaseModel {
 
-    public int ApiTokenId;
+    public int Id;
     public String ApiToken;
     public String ClientId;
-    public int UserId;
     public Date Expires;
 
     public ApiTokenModel() {}
@@ -34,10 +32,9 @@ public class ApiTokenModel extends BaseModel {
         DateFormat df = DateFormat.getDateInstance();
 
         try {
-            this.ApiTokenId = jsonObj.getInt("id");
+            this.Id = jsonObj.getInt("id");
             this.ApiToken = jsonObj.getString("api_token");
             this.ClientId = jsonObj.getString("client_id");
-            this.UserId = jsonObj.getInt("user_id");
 
             JSONObject expireDate = jsonObj.getJSONObject("expires");
             this.Expires = df.parse(expireDate.getString("date"));
@@ -51,15 +48,16 @@ public class ApiTokenModel extends BaseModel {
 
     public JSONObject ToJson() {
 
-        DateFormat df = DateFormat.getDateInstance();
+        DateFormat df = DateFormat.getDateInstance(DateFormat.DEFAULT);
         JSONObject obj = new JSONObject();
 
         try {
-            obj.put("id", this.ApiTokenId);
+            obj.put("id", this.Id);
             obj.put("api_token", this.ApiToken);
             obj.put("client_id", this.ClientId);
-            obj.put("user_id", this.UserId);
-            obj.put("expires", this.Expires);
+            if (this.Expires != null) {
+                obj.put("expires", df.format(this.Expires));
+            }
         } catch(JSONException e) {
             return null;
         }
@@ -70,10 +68,9 @@ public class ApiTokenModel extends BaseModel {
     public void Copy(Object model) {
         ApiTokenModel realModel = (ApiTokenModel) model;
 
-        this.ApiTokenId = realModel.ApiTokenId;
+        this.Id = realModel.Id;
         this.ApiToken = realModel.ApiToken;
         this.ClientId = realModel.ClientId;
-        this.UserId = realModel.UserId;
         this.Expires = realModel.Expires;
     }
 }

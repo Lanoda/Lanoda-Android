@@ -13,7 +13,6 @@ public class ApiResult<T extends BaseModel> {
     public T Content;
     public List<ApiError> Errors;
     public boolean IsSuccess;
-    public String Message;
     public int Status;
 
     public ApiResult () {}
@@ -21,14 +20,12 @@ public class ApiResult<T extends BaseModel> {
     public ApiResult (T content) {
         this.Content = content;
         this.IsSuccess = true;
-        this.Message = null;
         this.Errors = new ArrayList<>();
     }
 
     public ApiResult (T content, boolean isSuccess) {
         this.Content = content;
         this.IsSuccess = isSuccess;
-        this.Message = null;
         this.Errors = new ArrayList<>();
     }
 

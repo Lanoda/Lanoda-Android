@@ -6,6 +6,7 @@ import android.util.Log;
 import net.lanoda.app.android.models.BaseModel;
 import net.lanoda.app.android.models.factories.IModelFactory;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,7 +19,11 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -50,13 +55,43 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
             String returnedData = downloadUrl(UrlString, RequestMethod);
             JSONObject jsonObj = new JSONObject(returnedData);
 
-            JSONObject jsonObjData = jsonObj.getJSONObject("data");
-            if (jsonObjData != null) {
-                JSONObject jsonObjAT = jsonObjData.getJSONObject("api_token");
-                apiResult.Content = modelFactory.create();
-                apiResult.Content.ToModel(jsonObjAT);
-                apiResult.IsSuccess = true;
-                apiResult.Status = 200;
+            if (jsonObj.has("Content")) {
+                JSONObject content = jsonObj.getJSONObject("Content");
+                if (content != null) {
+                    apiResult.Content = modelFactory.create();
+                    apiResult.Content.ToModel(content);
+                }
+            }
+
+            if (jsonObj.has("IsSuccess")) {
+                apiResult.IsSuccess = jsonObj.getBoolean("IsSuccess");
+            }
+
+            if (jsonObj.has("Errors")) {
+                JSONArray errors = jsonObj.getJSONArray("Errors");
+                for (int i = 0; i < errors.length(); i++) {
+                    JSONObject error = (JSONObject) errors.get(i);
+                    String errId = null;
+                    String errMsg = null;
+                    Date errTime = null;
+
+                    if (error.has("Id")) {
+                        errId = error.getString("id");
+                    }
+                    if (error.has("Message")) {
+                        errMsg = error.getString("Message");
+                    }
+                    if (error.has("Time")) {
+                        DateFormat df = DateFormat.getDateInstance();
+                        try {
+                            errTime = df.parse(error.getString("Time"));
+                        } catch(ParseException e) {
+                            // Couldn't get Time
+                        }
+                    }
+
+                    apiResult.Errors.add(new ApiError(errId, errMsg, errTime));
+                }
             }
 
         } catch (JSONException|IOException e) {
@@ -101,17 +136,17 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
 
             // Starts the query
             conn.connect();
-            if (conn.getResponseCode() == HttpsURLConnection.HTTP_OK) {
-                InputStream in = new BufferedInputStream(conn.getInputStream());
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    result.append(line);
-                }
-                reader.close();
-                in.close();
+            InputStream in = new BufferedInputStream(conn.getInputStream());
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.append(line);
             }
+            reader.close();
+            in.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

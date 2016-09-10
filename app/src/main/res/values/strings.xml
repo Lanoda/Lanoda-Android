@@ -5,6 +5,9 @@
     <string name="api_param_email">email</string>
     <string name="api_param_password">password</string>
 
+    <!-- ApiToken Keys -->
+    <string name="api_token_pref_key">ApiTokenKey</string>
+
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password (optional)</string>

@@ -3,6 +3,8 @@ package net.lanoda.app.android.activities;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -64,7 +66,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private UserLoginTask mAuthTask = null;
     private AuthClient authClient;
-    private String authorizeAppTag;
 
 
     // UI references.
@@ -98,12 +99,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mLoginErrorView = (TextView) findViewById(R.id.login_error_message);
 
         Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
-        mEmailSignInButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                attemptLogin();
-            }
-        });
+        if (mEmailSignInButton != null) {
+            mEmailSignInButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    attemptLogin();
+                }
+            });
+        }
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
@@ -143,7 +146,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Callback received when a permissions request has been completed.
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         if (requestCode == REQUEST_READ_CONTACTS) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -211,8 +215,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     apiResult.Content = result.Content;
                     apiResult.Errors = result.Errors;
                     apiResult.IsSuccess = result.IsSuccess;
-                    apiResult.Message = result.Message;
-
 
                     if (apiResult.Errors != null) {
                         String errorText = "";
@@ -225,8 +227,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         }
                         mLoginErrorView.setText(errorText);
                     } else if (result.Content != null) {
-                        mLoginErrorView.setText(result.Content.ToJson().toString());
+                        //mLoginErrorView.setText(result.Content.ToJson().toString());
+
+                        SharedPreferences sharedPref = getBaseContext().getSharedPreferences(
+                                getString(R.string.api_token_pref_key), Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPref.edit();
+                        editor.putString(getString(R.string.api_token_pref_key),
+                                result.Content.ApiToken);
+                        editor.apply();
                     }
+
 
                     showProgress(false);
                 }
@@ -234,7 +244,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 @Override
                 public void onTaskUpdate(Integer... values) {
                     // TODO: Update
-                    String toastMessage = "Login Cancelled";
+                    String toastMessage = "Login at: " + values[0];
                     int toastDuration = Toast.LENGTH_SHORT;
 
                     Toast toast = Toast.makeText(getApplicationContext(), toastMessage, toastDuration);
@@ -251,9 +261,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 }
             };
 
-            String clientId = getString(R.string.client_id);
-            String clientSecret = getString(R.string.client_secret);
-            authClient.RequestApiToken(clientId, clientSecret, email, apiTaskCallback);
+            authClient.AuthorizeApp(getString(R.string.client_id), email, password, apiTaskCallback);
 
             /*
             // Show a progress spinner, and kick off a background task to
