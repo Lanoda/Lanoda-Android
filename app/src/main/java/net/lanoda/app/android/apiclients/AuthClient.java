@@ -2,10 +2,9 @@ package net.lanoda.app.android.apiclients;
 
 import android.content.Context;
 
-import net.lanoda.app.android.apihelpers.ApiResult;
 import net.lanoda.app.android.apihelpers.IApiTaskCallback;
 import net.lanoda.app.android.models.ApiTokenModel;
-import net.lanoda.app.android.models.factories.ApiTokenModelFactory;
+import net.lanoda.app.android.modelfactories.ApiTokenModelFactory;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -22,12 +21,20 @@ public class AuthClient extends BaseClient<ApiTokenModel> {
     public void AuthorizeApp(String clientId, String email, String password,
                              IApiTaskCallback<ApiTokenModel> callback) {
 
-        String endpoint = GetBaseApiUrl() + "auth/app"
-                + "?client_id=" + clientId
-                + "&email=" + email
-                + "&password" + password;
+        String endpoint = GetBaseApiUrl() + "authorize/client";
+        String query = "";
+        try {
+            query = "?client_id=" + URLEncoder.encode(clientId, "UTF-8")
+                    + "&email=" + URLEncoder.encode(email, "UTF-8")
+                    + "&password=" + URLEncoder.encode(password, "UTF-8");
 
-        GetAsync(endpoint, callback);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        endpoint += query;
+
+        PostAsync(endpoint, null, callback);
     }
 
     public void RequestApiToken(String clientId, String clientSecret, String email,

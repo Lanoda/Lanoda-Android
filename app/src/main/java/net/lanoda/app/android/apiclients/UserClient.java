@@ -3,7 +3,7 @@ package net.lanoda.app.android.apiclients;
 import android.content.Context;
 
 import net.lanoda.app.android.models.UserModel;
-import net.lanoda.app.android.models.factories.UserModelFactory;
+import net.lanoda.app.android.modelfactories.UserModelFactory;
 
 /**
  * Created by isaac on 8/20/2016.

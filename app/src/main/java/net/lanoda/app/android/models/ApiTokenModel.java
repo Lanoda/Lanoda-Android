@@ -1,15 +1,16 @@
 package net.lanoda.app.android.models;
 
-import net.lanoda.app.android.models.BaseModel;
-import net.lanoda.app.android.models.factories.ApiTokenModelFactory;
-import net.lanoda.app.android.models.factories.IModelFactory;
+import net.lanoda.app.android.modelfactories.ApiTokenModelFactory;
+import net.lanoda.app.android.modelfactories.IModelFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by isaac on 8/21/2016.
@@ -29,7 +30,7 @@ public class ApiTokenModel extends BaseModel {
 
     public boolean ToModel(JSONObject jsonObj) {
 
-        DateFormat df = DateFormat.getDateInstance();
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.US);
 
         try {
             this.Id = jsonObj.getInt("id");
@@ -37,7 +38,8 @@ public class ApiTokenModel extends BaseModel {
             this.ClientId = jsonObj.getString("client_id");
 
             JSONObject expireDate = jsonObj.getJSONObject("expires");
-            this.Expires = df.parse(expireDate.getString("date"));
+            String dateString = expireDate.getString("date");
+            this.Expires = df.parse(dateString);
 
         } catch(JSONException|ParseException e) {
             return false;

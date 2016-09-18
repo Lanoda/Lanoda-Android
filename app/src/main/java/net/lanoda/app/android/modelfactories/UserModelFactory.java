@@ -1,4 +1,4 @@
-package net.lanoda.app.android.models.factories;
+package net.lanoda.app.android.modelfactories;
 
 import net.lanoda.app.android.models.UserModel;
 

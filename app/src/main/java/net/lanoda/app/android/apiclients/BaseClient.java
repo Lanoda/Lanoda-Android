@@ -1,31 +1,15 @@
 package net.lanoda.app.android.apiclients;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import net.lanoda.app.android.R;
 import net.lanoda.app.android.apihelpers.ApiTask;
 import net.lanoda.app.android.apihelpers.IApiTaskCallback;
 import net.lanoda.app.android.models.BaseModel;
-import net.lanoda.app.android.models.factories.IModelFactory;
+import net.lanoda.app.android.modelfactories.IModelFactory;
 
 import org.json.JSONObject;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
 
 /**
  * Created by isaac on 8/20/2016.
@@ -101,7 +85,13 @@ public class BaseClient<T extends BaseModel> {
                               final IApiTaskCallback<T> callback) {
 
 
-        ApiTask<T> task = new ApiTask<>(url, requestMethod, modelFactory, jsonObject, callback);
+        SharedPreferences sharedPref = baseContext.getSharedPreferences(
+                baseContext.getString(R.string.api_token_pref_key), Context.MODE_PRIVATE);
+        String apiToken = sharedPref.getString(baseContext.getString(R.string.api_token_pref_key),
+                null);
+
+        ApiTask<T> task = new ApiTask<>(url, requestMethod, apiToken, modelFactory, jsonObject,
+                callback);
         task.execute(new String[]{});
 
         /*

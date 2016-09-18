@@ -1,4 +1,4 @@
-package net.lanoda.app.android.models.factories;
+package net.lanoda.app.android.modelfactories;
 
 /**
  * Created by isaac on 8/20/2016.

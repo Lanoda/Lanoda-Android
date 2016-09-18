@@ -1,10 +1,9 @@
 package net.lanoda.app.android.apihelpers;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import net.lanoda.app.android.models.BaseModel;
-import net.lanoda.app.android.models.factories.IModelFactory;
+import net.lanoda.app.android.modelfactories.IModelFactory;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,16 +14,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -33,16 +28,19 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, ApiResult<T>> {
 
-    HttpsURLConnection conn;
+    HttpURLConnection connHttp;
+    HttpsURLConnection connHttps;
     String UrlString;
     String RequestMethod;
+    String ApiToken;
     IModelFactory<T> modelFactory;
     JSONObject data;
     IApiTaskCallback<T> Callback;
 
-    public ApiTask(String url, String method, IModelFactory<T> factory, JSONObject jsonObject, IApiTaskCallback<T> callback) {
+    public ApiTask(String url, String method, String apiToken, IModelFactory<T> factory, JSONObject jsonObject, IApiTaskCallback<T> callback) {
         UrlString = url;
         RequestMethod = method;
+        ApiToken = apiToken;
         modelFactory = factory;
         data = jsonObject;
         Callback = callback;
@@ -53,6 +51,13 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
         ApiResult<T> apiResult = new ApiResult<>();
         try {
             String returnedData = downloadUrl(UrlString, RequestMethod);
+            if (returnedData.length() <= 0) {
+                apiResult.Errors = new ArrayList<>();
+                apiResult.Errors.add(new ApiError("ReturnedData_NoContent", "No content."));
+                apiResult.IsSuccess = false;
+                return apiResult;
+            }
+
             JSONObject jsonObj = new JSONObject(returnedData);
 
             if (jsonObj.has("Content")) {
@@ -76,7 +81,7 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
                     Date errTime = null;
 
                     if (error.has("Id")) {
-                        errId = error.getString("id");
+                        errId = error.getString("Id");
                     }
                     if (error.has("Message")) {
                         errMsg = error.getString("Message");
@@ -89,7 +94,7 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
                             // Couldn't get Time
                         }
                     }
-
+                    apiResult.Errors = new ArrayList<>();
                     apiResult.Errors.add(new ApiError(errId, errMsg, errTime));
                 }
             }
@@ -127,30 +132,99 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
         try {
 
             URL url = new URL(urlString);
-            conn = (HttpsURLConnection) url.openConnection();
-            conn.setReadTimeout(10 * 1000);
-            conn.setConnectTimeout(15 * 1000);
-            conn.setRequestMethod(requestMethod);
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
+            int responseCode = 200;
+            String responseMsg = "";
 
-            // Starts the query
-            conn.connect();
+            if (url.getProtocol().equals("https")) {
+                connHttps = (HttpsURLConnection) url.openConnection();
 
-            InputStream in = new BufferedInputStream(conn.getInputStream());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                connHttps.setReadTimeout(10 * 1000);
+                connHttps.setConnectTimeout(15 * 1000);
+                connHttps.setRequestMethod(requestMethod);
+                connHttps.setDoInput(true);
+                if (requestMethod.equals("POST")) {
+                    connHttps.setDoOutput(true);
+                }
+                connHttps.setRequestProperty("Content-Type", "application/json;charset=utf-8");
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                result.append(line);
+                if (ApiToken != null) {
+                    connHttps.setRequestProperty("lanoda-api-token", ApiToken);
+                }
+
+                // Starts the query
+                connHttps.connect();
+
+                responseCode = connHttps.getResponseCode();
+
+                if (responseCode == 200) {
+                    InputStream in = new BufferedInputStream(connHttps.getInputStream());
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        result.append(line);
+                    }
+                    reader.close();
+                    in.close();
+                } else {
+                    responseMsg = connHttps.getResponseMessage();
+                    return (String) connHttps.getContent();
+                }
+            } else {
+                connHttp = (HttpURLConnection) url.openConnection();
+
+                connHttp.setReadTimeout(10 * 100000);
+                connHttp.setConnectTimeout(15 * 100000);
+                connHttp.setRequestMethod(requestMethod);
+                connHttp.setDoInput(true);
+                if (requestMethod.equals("POST")) {
+                    connHttp.setDoOutput(true);
+                }
+                connHttp.setRequestProperty("Content-Type", "application/json;charset=utf-8");
+
+                if (ApiToken != null) {
+                    connHttp.setRequestProperty("lanoda-api-token", ApiToken);
+                }
+
+                // Starts the query
+                connHttp.connect();
+
+                responseCode = connHttp.getResponseCode();
+
+                if (responseCode == 200) {
+                    InputStream in = new BufferedInputStream(connHttp.getInputStream());
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        result.append(line);
+                    }
+                    reader.close();
+                    in.close();
+                } else {
+                    responseMsg = connHttp.getResponseMessage();
+                    return (String) connHttp.getContent();
+                }
             }
-            reader.close();
-            in.close();
+
+            if (responseCode != 200) {
+                return "{" +
+                        "   \"IsSuccess\": false," +
+                        "   \"Errors\": [" +
+                        "      {" +
+                        "          \"Id\": \"\"," +
+                        "          \"Message\": \"" + responseCode + " - " + responseMsg + "\"" +
+                        "       }" +
+                        "   ] " +
+                        "}";
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            conn.disconnect();
+            if (connHttps != null) {
+                connHttps.disconnect();
+            }
         }
 
         return result.toString();

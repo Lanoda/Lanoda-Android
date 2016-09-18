@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
@@ -79,6 +80,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+
+        SharedPreferences sharedPref = getBaseContext().getSharedPreferences(
+                getString(R.string.api_token_pref_key), Context.MODE_PRIVATE);
+        String apiToken = sharedPref.getString(getString(R.string.api_token_pref_key), null);
+        if (apiToken != null) {
+            Intent redirectToContacts = new Intent(this, ContactsActivity.class);
+            startActivity(redirectToContacts);
+            finish();
+        }
 
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -227,14 +238,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         }
                         mLoginErrorView.setText(errorText);
                     } else if (result.Content != null) {
-                        //mLoginErrorView.setText(result.Content.ToJson().toString());
-
                         SharedPreferences sharedPref = getBaseContext().getSharedPreferences(
                                 getString(R.string.api_token_pref_key), Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPref.edit();
                         editor.putString(getString(R.string.api_token_pref_key),
                                 result.Content.ApiToken);
                         editor.apply();
+
+                        Intent redirectToContacts = new Intent(LoginActivity.this, ContactsActivity.class);
+                        startActivity(redirectToContacts);
+                        finish();
                     }
 
 
@@ -243,12 +256,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
                 @Override
                 public void onTaskUpdate(Integer... values) {
-                    // TODO: Update
-                    String toastMessage = "Login at: " + values[0];
-                    int toastDuration = Toast.LENGTH_SHORT;
-
-                    Toast toast = Toast.makeText(getApplicationContext(), toastMessage, toastDuration);
-                    toast.show();
+                    mLoginErrorView.setText("Login at: " + values[0]);
                 }
 
                 @Override

@@ -1,15 +1,13 @@
 package net.lanoda.app.android.models;
 
-import net.lanoda.app.android.models.factories.ApiTokenModelFactory;
-import net.lanoda.app.android.models.factories.IModelFactory;
-import net.lanoda.app.android.models.factories.UserModelFactory;
+import net.lanoda.app.android.modelfactories.IModelFactory;
+import net.lanoda.app.android.modelfactories.UserModelFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -17,15 +15,16 @@ import java.util.Date;
  */
 public class UserModel extends BaseModel {
 
-    public int UserId;
+    public int Id;
     public String FirstName;
     public String LastName;
     public int ImageId;
     public String Email;
     public Date LastLoginAt;
 
-    public UserModel() {};
+    public UserModel() {}
 
+    @Override
     public IModelFactory<UserModel> GetFactory() {
         return new UserModelFactory();
     }
@@ -36,7 +35,7 @@ public class UserModel extends BaseModel {
         DateFormat df = DateFormat.getDateInstance();
 
         try {
-            this.UserId = jsonObj.getInt("id");
+            this.Id = jsonObj.getInt("id");
             this.FirstName = jsonObj.getString("firstname");
             this.LastName = jsonObj.getString("lastname");
             this.ImageId = jsonObj.getInt("image_id");
@@ -53,11 +52,35 @@ public class UserModel extends BaseModel {
 
     @Override
     public JSONObject ToJson() {
-        return null;
+
+        DateFormat df = DateFormat.getDateInstance(DateFormat.DEFAULT);
+        JSONObject obj = new JSONObject();
+
+        try {
+            obj.put("id", this.Id);
+            obj.put("firstname", this.FirstName);
+            obj.put("lastname", this.LastName);
+            obj.put("image_id", this.ImageId);
+            obj.put("email", this.Email);
+            if (this.LastLoginAt != null) {
+                obj.put("last_login_at", df.format(this.LastLoginAt));
+            }
+        } catch(JSONException e) {
+            return null;
+        }
+
+        return obj;
     }
 
     @Override
     public void Copy(Object model) {
+        UserModel realModel = (UserModel) model;
 
+        this.Id = realModel.Id;
+        this.FirstName = realModel.FirstName;
+        this.LastName = realModel.LastName;
+        this.ImageId = realModel.ImageId;
+        this.Email = realModel.Email;
+        this.LastLoginAt = realModel.LastLoginAt;
     }
 }
