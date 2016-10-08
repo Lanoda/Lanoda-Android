@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -29,7 +30,6 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -71,7 +71,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     // UI references.
     private AutoCompleteTextView mEmailView;
-    private EditText mPasswordView;
+    private TextInputEditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
     private TextView mLoginErrorView;
@@ -86,7 +86,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 getString(R.string.api_token_pref_key), Context.MODE_PRIVATE);
         String apiToken = sharedPref.getString(getString(R.string.api_token_pref_key), null);
         if (apiToken != null) {
-            Intent redirectToContacts = new Intent(this, ContactsActivity.class);
+            Intent redirectToContacts = new Intent(this, ContactListActivity.class);
             startActivity(redirectToContacts);
             finish();
         }
@@ -95,7 +95,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
 
-        mPasswordView = (EditText) findViewById(R.id.password);
+        mPasswordView = (TextInputEditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
@@ -245,7 +245,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 result.Content.ApiToken);
                         editor.apply();
 
-                        Intent redirectToContacts = new Intent(LoginActivity.this, ContactsActivity.class);
+                        Intent redirectToContacts = new Intent(LoginActivity.this, ContactListActivity.class);
                         startActivity(redirectToContacts);
                         finish();
                     }

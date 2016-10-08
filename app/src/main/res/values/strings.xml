@@ -20,6 +20,10 @@
     <string name="permission_rationale">
         "Contacts permissions are needed for providing email completions."
     </string>
-    <string name="title_activity_contacts">ContactsActivity</string>
+    <string name="title_activity_contact_list">Contacts</string>
+    <string name="title_activity_contact_create">Create Contact</string>
 
+    <!-- Contacts-Related Strings -->
+    <string name="firstname_hint">First Name</string>
+    <string name="lastname_hint">Last Name</string>
 </resources>

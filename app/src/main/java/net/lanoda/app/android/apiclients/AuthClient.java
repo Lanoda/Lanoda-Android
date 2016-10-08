@@ -63,7 +63,7 @@ public class AuthClient extends BaseClient<ApiTokenModel> {
                     + "?client_id=" + URLEncoder.encode(clientId, "UTF-8")
                     + "&api_token=" + URLEncoder.encode(apiToken, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            // TODO: HandleException
+            e.printStackTrace();
         }
 
         PostAsync(endpoint, null, callback);

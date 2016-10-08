@@ -8,7 +8,9 @@ import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by isaac on 8/14/2016.
@@ -32,7 +34,7 @@ public class UserModel extends BaseModel {
     @Override
     public boolean ToModel(JSONObject jsonObj) {
 
-        DateFormat df = DateFormat.getDateInstance();
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.US);
 
         try {
             this.Id = jsonObj.getInt("id");
@@ -53,7 +55,7 @@ public class UserModel extends BaseModel {
     @Override
     public JSONObject ToJson() {
 
-        DateFormat df = DateFormat.getDateInstance(DateFormat.DEFAULT);
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.US);
         JSONObject obj = new JSONObject();
 
         try {

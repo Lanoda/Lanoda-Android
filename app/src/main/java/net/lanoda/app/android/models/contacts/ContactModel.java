@@ -9,23 +9,25 @@ import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Created by isaac on 9/17/2016.
  */
 public class ContactModel extends BaseModel {
 
-    public int Id;
-    public int UserId;
-    public int ImageId;
+    public String Id;
+    public String UserId;
+    public String ImageId;
     public String FirstName;
     public String MiddleName;
     public String LastName;
     public String Phone;
     public String Email;
     public String Address;
-    public int Age;
+    public String Age;
     public Date Birthday;
 
     public ContactModel() {}
@@ -38,22 +40,23 @@ public class ContactModel extends BaseModel {
     @Override
     public boolean ToModel(JSONObject jsonObj) {
 
-        DateFormat df = DateFormat.getDateInstance();
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 
         try {
 
-            this.Id = jsonObj.getInt("id");
+            this.Id = jsonObj.getString("id");
+            this.ImageId = jsonObj.getString("image_id");
             this.FirstName = jsonObj.getString("firstname");
             this.MiddleName = jsonObj.getString("middlename");
             this.LastName = jsonObj.getString("lastname");
             this.Phone = jsonObj.getString("phone");
             this.Email = jsonObj.getString("email");
             this.Address = jsonObj.getString("address");
-            this.Age = jsonObj.getInt("age");
+            this.Age = jsonObj.getString("age");
             this.Birthday = df.parse(jsonObj.getString("birthday"));
 
         } catch(JSONException |ParseException e) {
-            // TODO: Implement
+            e.printStackTrace();
             return false;
         }
 
@@ -63,7 +66,7 @@ public class ContactModel extends BaseModel {
     @Override
     public JSONObject ToJson() {
 
-        DateFormat df = DateFormat.getDateInstance(DateFormat.DEFAULT);
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
         JSONObject obj = new JSONObject();
 
         try {
@@ -81,6 +84,7 @@ public class ContactModel extends BaseModel {
                 obj.put("birthday", df.format(this.Birthday));
             }
         } catch(JSONException e) {
+            e.printStackTrace();
             return null;
         }
 
@@ -103,4 +107,5 @@ public class ContactModel extends BaseModel {
         this.Age = realModel.Age;
         this.Birthday = realModel.Birthday;
     }
+
 }

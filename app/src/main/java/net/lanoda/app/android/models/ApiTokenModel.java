@@ -50,7 +50,7 @@ public class ApiTokenModel extends BaseModel {
 
     public JSONObject ToJson() {
 
-        DateFormat df = DateFormat.getDateInstance(DateFormat.DEFAULT);
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.US);
         JSONObject obj = new JSONObject();
 
         try {

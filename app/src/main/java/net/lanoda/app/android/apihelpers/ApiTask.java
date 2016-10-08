@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
@@ -28,14 +29,16 @@ import javax.net.ssl.HttpsURLConnection;
  */
 public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, ApiResult<T>> {
 
-    HttpURLConnection connHttp;
-    HttpsURLConnection connHttps;
-    String UrlString;
-    String RequestMethod;
-    String ApiToken;
-    IModelFactory<T> modelFactory;
-    JSONObject data;
-    IApiTaskCallback<T> Callback;
+    private HttpURLConnection connHttp;
+    private HttpsURLConnection connHttps;
+    private String UrlString;
+    private String RequestMethod;
+    private String ApiToken;
+    private int ResponseCode = 0;
+    private String ResponseMsg;
+    private IModelFactory<T> modelFactory;
+    private JSONObject data;
+    private IApiTaskCallback<T> Callback;
 
     public ApiTask(String url, String method, String apiToken, IModelFactory<T> factory, JSONObject jsonObject, IApiTaskCallback<T> callback) {
         UrlString = url;
@@ -52,8 +55,18 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
         try {
             String returnedData = downloadUrl(UrlString, RequestMethod);
             if (returnedData.length() <= 0) {
+
+                String errorId = "ReturnedData_NoContent";
+                if (ResponseCode != 0) {
+                    errorId = Integer.toString(ResponseCode);
+                }
+                String errorMsg = "No content.";
+                if (ResponseMsg != null) {
+                    errorMsg = ResponseMsg;
+                }
+
                 apiResult.Errors = new ArrayList<>();
-                apiResult.Errors.add(new ApiError("ReturnedData_NoContent", "No content."));
+                apiResult.Errors.add(new ApiError(errorId, errorMsg));
                 apiResult.IsSuccess = false;
                 return apiResult;
             }
@@ -132,8 +145,6 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
         try {
 
             URL url = new URL(urlString);
-            int responseCode = 200;
-            String responseMsg = "";
 
             if (url.getProtocol().equals("https")) {
                 connHttps = (HttpsURLConnection) url.openConnection();
@@ -154,7 +165,7 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
                 // Starts the query
                 connHttps.connect();
 
-                responseCode = connHttps.getResponseCode();
+                int responseCode = connHttps.getResponseCode();
 
                 if (responseCode == 200) {
                     InputStream in = new BufferedInputStream(connHttps.getInputStream());
@@ -167,7 +178,8 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
                     reader.close();
                     in.close();
                 } else {
-                    responseMsg = connHttps.getResponseMessage();
+                    ResponseCode = responseCode;
+                    ResponseMsg = connHttps.getResponseMessage();
                     return (String) connHttps.getContent();
                 }
             } else {
@@ -189,7 +201,7 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
                 // Starts the query
                 connHttp.connect();
 
-                responseCode = connHttp.getResponseCode();
+                int responseCode = connHttp.getResponseCode();
 
                 if (responseCode == 200) {
                     InputStream in = new BufferedInputStream(connHttp.getInputStream());
@@ -202,25 +214,24 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
                     reader.close();
                     in.close();
                 } else {
-                    responseMsg = connHttp.getResponseMessage();
+                    ResponseCode = responseCode;
+                    ResponseMsg = connHttp.getResponseMessage();
                     return (String) connHttp.getContent();
                 }
             }
 
-            if (responseCode != 200) {
-                return "{" +
-                        "   \"IsSuccess\": false," +
-                        "   \"Errors\": [" +
-                        "      {" +
-                        "          \"Id\": \"\"," +
-                        "          \"Message\": \"" + responseCode + " - " + responseMsg + "\"" +
-                        "       }" +
-                        "   ] " +
-                        "}";
-            }
-
-        } catch (Exception e) {
+        } catch (ConnectException e) {
             e.printStackTrace();
+            return "{" +
+                    " \"IsSuccess\": false," +
+                    " \"Content\": {}," +
+                    " \"Errors\": [" +
+                    "       {" +
+                    "           \"Id\": \"ConnectionException\"," +
+                    "           \"Message\": \"Connection could not be established.\"" +
+                    "       } " +
+                    "   ]" +
+                    "}";
         } finally {
             if (connHttps != null) {
                 connHttps.disconnect();
