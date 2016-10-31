@@ -37,6 +37,20 @@ public class AuthClient extends BaseClient<ApiTokenModel> {
         PostAsync(endpoint, null, callback);
     }
 
+    public void RefreshApiToken(String refreshToken, IApiTaskCallback<ApiTokenModel> callback) {
+
+        String endpoint = GetBaseApiUrl();
+        try {
+            endpoint += "api-token/refresh"
+                    + "?refresh_token=" + URLEncoder.encode(refreshToken, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        PostAsync(endpoint, null, callback);
+    }
+
+    /*
     public void RequestApiToken(String clientId, String clientSecret, String email,
                                   IApiTaskCallback<ApiTokenModel> callback) {
 
@@ -53,19 +67,5 @@ public class AuthClient extends BaseClient<ApiTokenModel> {
 
         PostAsync(endpoint, null, callback);
     }
-
-    public void RefreshApiToken(String clientId, String apiToken,
-                                IApiTaskCallback<ApiTokenModel> callback) {
-
-        String endpoint = GetBaseApiUrl();
-        try {
-            endpoint += "api-token/refresh"
-                    + "?client_id=" + URLEncoder.encode(clientId, "UTF-8")
-                    + "&api_token=" + URLEncoder.encode(apiToken, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        PostAsync(endpoint, null, callback);
-    }
+    */
 }

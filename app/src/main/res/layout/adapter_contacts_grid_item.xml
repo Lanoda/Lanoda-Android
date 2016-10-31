@@ -7,8 +7,10 @@
     <ImageView
         android:id="@+id/contacts_grid_item_image"
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:gravity="center" />
+        android:layout_height="80dp"
+        android:gravity="center"
+        android:tint="@color/gray_base"
+        android:contentDescription="@string/contact_image_description" />
 
     <TextView
         android:id="@+id/contacts_grid_item_text"

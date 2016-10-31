@@ -11,19 +11,26 @@ import net.lanoda.app.android.modelfactories.IModelFactory;
 
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Created by isaac on 8/20/2016.
+ *
+ * The Base Client that all model-specific ApiClients will inherit.
  */
-public class BaseClient<T extends BaseModel> {
+class BaseClient<T extends BaseModel> {
 
-    private static BaseClient mInstance;
+    private BaseClient mInstance;
     private Context baseContext;
     private IModelFactory<T> modelFactory;
 
     // Volley Variables
     //private RequestQueue mRequestQueue;
 
-    public BaseClient(Context base, IModelFactory<T> factory) {
+    BaseClient(Context base, IModelFactory<T> factory) {
         baseContext = base;
         //mRequestQueue = getRequestQueue();
         //mRequestQueue.start();
@@ -45,32 +52,32 @@ public class BaseClient<T extends BaseModel> {
     }
     */
 
-    public String GetBaseApiUrl() {
+    String GetBaseApiUrl() {
         return baseContext.getString(R.string.api_root_url);
     }
 
-    public void DeleteAsync(String url, IApiTaskCallback<T> callback) {
-        AsyncRequest(url, "DELETE", null, callback);
+    void DeleteAsync(String url, IApiTaskCallback<T> callback) {
+        AsyncRequest(url, baseContext.getString(R.string.http_delete), null, callback);
     }
 
-    public void GetAsync(String url, IApiTaskCallback<T> callback) {
-        AsyncRequest(url, "GET", null, callback);
+    void GetAsync(String url, IApiTaskCallback<T> callback) {
+        AsyncRequest(url, baseContext.getString(R.string.http_get), null, callback);
     }
 
-    public void PostAsync(String url, T model, IApiTaskCallback<T> callback) {
+    void PostAsync(String url, T model, IApiTaskCallback<T> callback) {
         JSONObject postData = null;
         if (model != null) {
             postData = model.ToJson();
         }
-        AsyncRequest(url, "POST", postData, callback);
+        AsyncRequest(url, baseContext.getString(R.string.http_post), postData, callback);
     }
 
-    public void PutAsync(String url, T model, IApiTaskCallback<T> callback) {
+    void PutAsync(String url, T model, IApiTaskCallback<T> callback) {
         JSONObject postData = null;
         if (model != null) {
             postData = model.ToJson();
         }
-        AsyncRequest(url, "PUT", postData, callback);
+        AsyncRequest(url, baseContext.getString(R.string.http_put), postData, callback);
     }
 
     /**
@@ -85,10 +92,12 @@ public class BaseClient<T extends BaseModel> {
                               final IApiTaskCallback<T> callback) {
 
 
-        SharedPreferences sharedPref = baseContext.getSharedPreferences(
-                baseContext.getString(R.string.api_token_pref_key), Context.MODE_PRIVATE);
-        String apiToken = sharedPref.getString(baseContext.getString(R.string.api_token_pref_key),
+        SharedPreferences sharedPref = baseContext.getSharedPreferences(baseContext.getString(
+                R.string.api_token_pref_key), Context.MODE_PRIVATE);
+
+        String apiToken = sharedPref.getString(baseContext.getString(R.string.api_token_token_key),
                 null);
+
 
         ApiTask<T> task = new ApiTask<>(url, requestMethod, apiToken, modelFactory, jsonObject,
                 callback);

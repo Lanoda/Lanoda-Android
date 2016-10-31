@@ -3,10 +3,12 @@ package net.lanoda.app.android.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.ContentLoadingProgressBar;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.GridView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import net.lanoda.app.android.R;
@@ -19,8 +21,10 @@ import net.lanoda.app.android.models.contacts.ContactListModel;
 
 public class ContactListActivity extends AppCompatActivity {
 
-    protected GridView contactsGrid;
-    protected TextView contactsError;
+    protected GridView gvContactsGrid;
+    protected TextView tvContactsError;
+    protected SwipeRefreshLayout srlContactsSwipeRefresh;
+    protected FloatingActionButton fabCreateContact;
     protected boolean mIsLargeLayout;
 
     @Override
@@ -30,38 +34,60 @@ public class ContactListActivity extends AppCompatActivity {
         //Toolbar toolbar = (Toolbar) findViewById(R.id.contact_list_toolbar);
         //setSupportActionBar(toolbar);
 
-        contactsError = (TextView) findViewById(R.id.contacts_error);
-        contactsGrid = (GridView) findViewById(R.id.contacts_grid);
-
         mIsLargeLayout = getResources().getBoolean(R.bool.large_layout);
 
-        RetrieveContacts();
+        tvContactsError = (TextView) findViewById(R.id.contacts_error);
+        gvContactsGrid = (GridView) findViewById(R.id.contacts_grid);
+        fabCreateContact = (FloatingActionButton) findViewById(R.id.create_contact_fab);
+        srlContactsSwipeRefresh = (SwipeRefreshLayout) findViewById(R.id.contacts_grid_refresh);
 
-        FloatingActionButton createContactFab =
-                (FloatingActionButton) findViewById(R.id.create_contact_fab);
-        if (createContactFab != null) {
-            createContactFab.setOnClickListener(new View.OnClickListener() {
+        if (fabCreateContact != null) {
+            fabCreateContact.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     ShowCreateContact();
                 }
             });
         }
+
+        if (srlContactsSwipeRefresh != null) {
+            srlContactsSwipeRefresh.setColorSchemeResources(R.color.colorAccent);
+            srlContactsSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+                @Override
+                public void onRefresh() {
+                    srlContactsSwipeRefresh.setRefreshing(true);
+                    tvContactsError.setText("");
+                    RetrieveContacts();
+                }
+            });
+            srlContactsSwipeRefresh.post(new Runnable() {
+                @Override
+                public void run() {
+                    srlContactsSwipeRefresh.setRefreshing(true);
+                }
+            });
+        }
+
+        RetrieveContacts();
     }
 
     protected void RetrieveContacts() {
+        gvContactsGrid.removeAllViewsInLayout();
+
         IApiTaskCallback<ContactListModel> apiTaskCallback =
                 new IApiTaskCallback<ContactListModel>() {
 
                     @Override
                     public void onTaskFinished(ApiResult<ContactListModel> result) {
                         if (result.IsSuccess && result.Content != null) {
+                            tvContactsError.setText("");
                             ContactsArrayAdapter arrayAdapter = new ContactsArrayAdapter(
                                     ContactListActivity.this, result.Content.Contacts);
 
-                            contactsGrid.setAdapter(arrayAdapter);
+                            gvContactsGrid.setAdapter(arrayAdapter);
+                            gvContactsGrid.setVisibility(View.VISIBLE);
                         } else {
-                            String errorText = "Error Retrieving Contacts";
+                            String errorText = "Error Retrieving Contacts.\n";
                             if (result.Errors != null) {
                                 for(int i = 0; i < result.Errors.size(); i++) {
                                     errorText += result.Errors.get(i).Id;
@@ -70,8 +96,9 @@ public class ContactListActivity extends AppCompatActivity {
                                     errorText += "\n";
                                 }
                             }
-                            contactsError.setText(errorText);
+                            tvContactsError.setText(errorText);
                         }
+                        srlContactsSwipeRefresh.setRefreshing(false);
                     }
 
                     @Override
@@ -81,15 +108,15 @@ public class ContactListActivity extends AppCompatActivity {
 
                     @Override
                     public void onTaskCancelled() {
-
+                        srlContactsSwipeRefresh.setRefreshing(false);
                     }
                 };
-
-        ContactListClient client = new ContactListClient(this);
 
         ApiListParams listParams = new ApiListParams();
         listParams.PageIndex = 0;
         listParams.PageSize = 100;
+
+        ContactListClient client = new ContactListClient(this);
         client.GetContactsForUser(listParams, apiTaskCallback);
     }
 

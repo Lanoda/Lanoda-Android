@@ -40,8 +40,13 @@ import net.lanoda.app.android.apihelpers.ApiResult;
 import net.lanoda.app.android.apihelpers.IApiTaskCallback;
 import net.lanoda.app.android.models.ApiTokenModel;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -84,11 +89,35 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         SharedPreferences sharedPref = getBaseContext().getSharedPreferences(
                 getString(R.string.api_token_pref_key), Context.MODE_PRIVATE);
-        String apiToken = sharedPref.getString(getString(R.string.api_token_pref_key), null);
-        if (apiToken != null) {
-            Intent redirectToContacts = new Intent(this, ContactListActivity.class);
-            startActivity(redirectToContacts);
-            finish();
+        String apiToken = sharedPref.getString(getString(R.string.api_token_token_key), null);
+
+        String expiresString = sharedPref.getString(getBaseContext().getString(
+                R.string.api_token_expires_key), null);
+
+        String refreshToken = sharedPref.getString(getBaseContext().getString(
+                R.string.api_token_refresh_key), null);
+
+        Date convertedExpires = null;
+        if (expiresString != null) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa", Locale.US);
+            try {
+                convertedExpires = dateFormat.parse(expiresString);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+
+        Calendar c = Calendar.getInstance();
+        Date today = c.getTime();
+
+        if (apiToken != null && convertedExpires != null && refreshToken != null) {
+            if (today.after(convertedExpires)) {
+                refreshApiToken(refreshToken);
+            } else {
+                Intent redirectToContacts = new Intent(this, ContactListActivity.class);
+                startActivity(redirectToContacts);
+                finish();
+            }
         }
 
         // Set up the login form.
@@ -241,8 +270,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         SharedPreferences sharedPref = getBaseContext().getSharedPreferences(
                                 getString(R.string.api_token_pref_key), Context.MODE_PRIVATE);
                         SharedPreferences.Editor editor = sharedPref.edit();
-                        editor.putString(getString(R.string.api_token_pref_key),
+                        editor.putString(getString(R.string.api_token_token_key),
                                 result.Content.ApiToken);
+                        editor.putString(getString(R.string.api_token_refresh_key),
+                                result.Content.RefreshToken);
+
+                        SimpleDateFormat df = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa", Locale.US);
+                        editor.putString(getString(R.string.api_token_expires_key),
+                                df.format(result.Content.Expires));
                         editor.apply();
 
                         Intent redirectToContacts = new Intent(LoginActivity.this, ContactListActivity.class);
@@ -289,6 +324,67 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
         return password.length() > 4;
+    }
+
+    private void refreshApiToken(String refreshToken) {
+
+        IApiTaskCallback<ApiTokenModel> apiTaskCallback = new IApiTaskCallback<ApiTokenModel>() {
+            @Override
+            public void onTaskFinished(ApiResult<ApiTokenModel> result) {
+
+                ApiResult<ApiTokenModel> apiResult = new ApiResult<>();
+
+                apiResult.Content = result.Content;
+                apiResult.Errors = result.Errors;
+                apiResult.IsSuccess = result.IsSuccess;
+
+                if (apiResult.Errors != null) {
+                    String errorText = "";
+                    for (ApiError current : result.Errors) {
+                        errorText += "\n";
+                        errorText += current.Id;
+                        errorText += ": ";
+                        errorText += current.Message;
+                        errorText += "\n";
+                    }
+                    mLoginErrorView.setText(errorText);
+                } else if (result.Content != null) {
+                    SharedPreferences sharedPref = getBaseContext().getSharedPreferences(
+                            getString(R.string.api_token_pref_key), Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putString(getString(R.string.api_token_token_key),
+                            result.Content.ApiToken);
+                    editor.putString(getString(R.string.api_token_refresh_key),
+                            result.Content.RefreshToken);
+                    editor.putString(getString(R.string.api_token_expires_key),
+                            result.Content.Expires.toString());
+                    editor.apply();
+
+                    Intent redirectToContacts = new Intent(LoginActivity.this, ContactListActivity.class);
+                    startActivity(redirectToContacts);
+                    finish();
+                }
+
+
+                showProgress(false);
+            }
+
+            @Override
+            public void onTaskUpdate(Integer... values) {
+                mLoginErrorView.setText("Login at: " + values[0]);
+            }
+
+            @Override
+            public void onTaskCancelled() {
+                String toastMessage = "Login Cancelled";
+                int toastDuration = Toast.LENGTH_SHORT;
+
+                Toast toast = Toast.makeText(getApplicationContext(), toastMessage, toastDuration);
+                toast.show();
+            }
+        };
+
+        authClient.RefreshApiToken(refreshToken, apiTaskCallback);
     }
 
     /**

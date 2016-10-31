@@ -19,6 +19,7 @@ public class ApiTokenModel extends BaseModel {
 
     public int Id;
     public String ApiToken;
+    public String RefreshToken;
     public String ClientId;
     public Date Expires;
 
@@ -36,6 +37,7 @@ public class ApiTokenModel extends BaseModel {
             this.Id = jsonObj.getInt("id");
             this.ApiToken = jsonObj.getString("api_token");
             this.ClientId = jsonObj.getString("client_id");
+            this.RefreshToken = jsonObj.getString("refresh_token");
 
             JSONObject expireDate = jsonObj.getJSONObject("expires");
             String dateString = expireDate.getString("date");
@@ -57,6 +59,7 @@ public class ApiTokenModel extends BaseModel {
             obj.put("id", this.Id);
             obj.put("api_token", this.ApiToken);
             obj.put("client_id", this.ClientId);
+            obj.put("refresh_token", this.RefreshToken);
             if (this.Expires != null) {
                 obj.put("expires", df.format(this.Expires));
             }
@@ -73,6 +76,7 @@ public class ApiTokenModel extends BaseModel {
         this.Id = realModel.Id;
         this.ApiToken = realModel.ApiToken;
         this.ClientId = realModel.ClientId;
+        this.RefreshToken = realModel.RefreshToken;
         this.Expires = realModel.Expires;
     }
 }

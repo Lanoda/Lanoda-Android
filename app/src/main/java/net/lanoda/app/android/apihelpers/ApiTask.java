@@ -26,6 +26,8 @@ import javax.net.ssl.HttpsURLConnection;
 
 /**
  * Created by isaac on 8/27/2016.
+ *
+ * Handles asynchronous calls to the Api.
  */
 public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, ApiResult<T>> {
 
@@ -40,7 +42,8 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
     private JSONObject data;
     private IApiTaskCallback<T> Callback;
 
-    public ApiTask(String url, String method, String apiToken, IModelFactory<T> factory, JSONObject jsonObject, IApiTaskCallback<T> callback) {
+    public ApiTask(String url, String method, String apiToken, IModelFactory<T> factory,
+                   JSONObject jsonObject, IApiTaskCallback<T> callback) {
         UrlString = url;
         RequestMethod = method;
         ApiToken = apiToken;
@@ -153,8 +156,9 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
                 connHttps.setConnectTimeout(15 * 1000);
                 connHttps.setRequestMethod(requestMethod);
                 connHttps.setDoInput(true);
-                if (requestMethod.equals("POST")) {
+                if (requestMethod.equals("POST") || requestMethod.equals("PUT")) {
                     connHttps.setDoOutput(true);
+                    connHttps.getOutputStream().write(data.toString().getBytes("UTF-8"));
                 }
                 connHttps.setRequestProperty("Content-Type", "application/json;charset=utf-8");
 
@@ -221,18 +225,16 @@ public class ApiTask<T extends BaseModel> extends AsyncTask<String[], Integer, A
             }
 
         } catch (ConnectException e) {
-            e.printStackTrace();
-            return "{" +
-                    " \"IsSuccess\": false," +
-                    " \"Content\": {}," +
-                    " \"Errors\": [" +
-                    "       {" +
-                    "           \"Id\": \"ConnectionException\"," +
-                    "           \"Message\": \"Connection could not be established.\"" +
-                    "       } " +
-                    "   ]" +
-                    "}";
+            //e.printStackTrace();
+            String conErrId = "ConnectionFailed";
+            String conErrMsg = "Connection could not be established.";
+            String errObj = String.format("[{'Id': '%s', 'Message': '%s'}]", conErrId, conErrMsg);
+            return String.format("{'IsSuccess': false, 'Content': {}, 'Errors': %s}", errObj);
         } finally {
+            if (connHttp != null) {
+                connHttp.disconnect();
+            }
+
             if (connHttps != null) {
                 connHttps.disconnect();
             }

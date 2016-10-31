@@ -46,7 +46,7 @@ public class ContactsArrayAdapter extends BaseAdapter {
 
             ContactModel currentContact = contacts.get(position);
 
-            gridView = inflater.inflate(R.layout.contacts_grid_item, null);
+            gridView = inflater.inflate(R.layout.adapter_contacts_grid_item, null);
 
             TextView contactName = (TextView) gridView.findViewById(R.id.contacts_grid_item_text);
 
